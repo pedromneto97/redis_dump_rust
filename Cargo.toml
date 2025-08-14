@@ -1,0 +1,27 @@
+[package]
+name = "redis_dump_rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1.47", features = [
+    "macros",
+    "rt-multi-thread",
+    "fs",
+    "io-util",
+    "sync",
+] }
+clap = { version = "4.5", features = ["derive"] }
+redis = { version = "0.32", features = [
+    "aio",
+    "tokio-comp",
+    "connection-manager",
+] }
+indicatif = "0.18"
+anyhow = "1.0"
+futures = "0.3"
+
+[profile.release]
+lto = true
+panic = 'abort'
+codegen-units = 1
