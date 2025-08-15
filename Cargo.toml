@@ -12,11 +12,7 @@ tokio = { version = "1.47", features = [
     "sync",
 ] }
 clap = { version = "4.5", features = ["derive"] }
-redis = { version = "0.32", features = [
-    "aio",
-    "tokio-comp",
-    "connection-manager",
-] }
+redis = { version = "0.32", features = ["aio", "tokio-comp"] }
 indicatif = "0.18"
 anyhow = "1.0"
 futures = "0.3"
