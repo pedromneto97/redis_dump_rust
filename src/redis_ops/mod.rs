@@ -67,7 +67,7 @@ pub fn format_resp_command(parts: &[&str]) -> String {
     let mut result = String::new();
     result.push_str(&format!("*{}\r\n", parts.len()));
     for part in parts {
-        result.push_str(&format!("${}\r\n{}\r\n", part.len(), part));
+        result.push_str(&format!("${}\r\n{part}\r\n", part.len()));
     }
     result
 }
@@ -77,8 +77,8 @@ pub fn parse_redis_command(command: &str) -> Vec<String> {
     let mut current_part = String::new();
     let mut in_quotes = false;
     let mut escape_next = false;
-    let mut chars = command.trim().chars().peekable();
-    while let Some(ch) = chars.next() {
+    let chars = command.trim().chars().peekable();
+    for ch in chars {
         if escape_next {
             current_part.push(ch);
             escape_next = false;
@@ -95,6 +95,7 @@ pub fn parse_redis_command(command: &str) -> Vec<String> {
             current_part.push(ch);
         }
     }
+
     if !current_part.is_empty() {
         parts.push(current_part);
     }
@@ -103,7 +104,7 @@ pub fn parse_redis_command(command: &str) -> Vec<String> {
 
 pub fn format_command_output(command: &str, format: &OutputFormat) -> String {
     match format {
-        OutputFormat::Commands => format!("{}\n", command),
+        OutputFormat::Commands => format!("{command}\n"),
         OutputFormat::Resp => {
             let parts = parse_redis_command(command);
             let part_refs: Vec<&str> = parts.iter().map(|s| s.as_str()).collect();
@@ -227,7 +228,7 @@ pub async fn generate_redis_commands_batch_optimized(
                             )
                         })
                         .collect();
-                    commands.push(format!("HMSET \"{}\" {}", key, field_value_pairs.join(" ")));
+                    commands.push(format!("HMSET \"{key}\" {}", field_value_pairs.join(" ")));
                 }
             }
             _ => {}
@@ -236,7 +237,7 @@ pub async fn generate_redis_commands_batch_optimized(
         if let Some(ttl) = key_ttls.get(key) {
             match key_type.as_str() {
                 "list" | "set" | "zset" | "hash" => {
-                    all_commands.push(format!("EXPIRE \"{}\" {}", key, ttl));
+                    all_commands.push(format!("EXPIRE \"{key}\" {ttl}"));
                 }
                 _ => {}
             }
@@ -254,7 +255,7 @@ pub async fn dump_keys(
 ) -> Result<()> {
     if keys.is_empty() {
         if !config.silent {
-            println!("⚠️  No keys found for group: {}", group_name);
+            println!("⚠️  No keys found for group: {group_name}");
         }
         return Ok(());
     }
@@ -269,10 +270,10 @@ pub async fn dump_keys(
     let file = File::create(output_file).await?;
     let writer = Arc::new(Mutex::new(BufWriter::new(file)));
     if !config.silent {
-        println!("📝 Output file created: {}", output_file);
+        println!("📝 Output file created: {output_file}");
     }
     progress.update_stage("Distributing work among workers");
-    let chunk_size = (keys.len() + config.workers - 1) / config.workers;
+    let chunk_size = keys.len().div_ceil(config.workers);
     let key_chunks: Vec<Vec<String>> = keys
         .chunks(chunk_size)
         .map(|chunk| chunk.to_vec())
@@ -354,9 +355,8 @@ pub async fn dump_keys(
                     if let Err(e) = writer_guard.write_all(formatted_command.as_bytes()).await {
                         if !worker_config.silent {
                             eprintln!(
-                                "❌ Worker {} - Erro ao escrever comando: {}",
+                                "❌ Worker {} - Erro ao escrever comando: {e}",
                                 worker_id + 1,
-                                e
                             );
                         }
                     }
@@ -374,12 +374,12 @@ pub async fn dump_keys(
         if let Err(e) = result {
             failed_workers += 1;
             if !config.silent {
-                eprintln!("❌ Worker {} falhou: {}", idx + 1, e);
+                eprintln!("❌ Worker {} falhou: {e}", idx + 1);
             }
         } else if let Ok(Err(e)) = result {
             failed_workers += 1;
             if !config.silent {
-                eprintln!("❌ Worker {} erro: {}", idx + 1, e);
+                eprintln!("❌ Worker {} erro: {e}", idx + 1);
             }
         }
     }
@@ -388,18 +388,15 @@ pub async fn dump_keys(
     writer_guard.flush().await?;
     drop(writer_guard);
     let success_message = if failed_workers > 0 {
-        format!("Dump completed with {} workers failed", failed_workers)
+        format!("Dump completed with {failed_workers} workers failed")
     } else {
         "Dump completed - all workers finished successfully".to_string()
     };
     progress.finish(&success_message);
     if !config.silent {
-        println!(
-            "✅ Dump for group '{}' saved to: {}",
-            group_name, output_file
-        );
+        println!("✅ Dump for group '{group_name}' saved to: {output_file}",);
         if failed_workers > 0 {
-            println!("⚠️  {} worker(s) failed during processing", failed_workers);
+            println!("⚠️  {failed_workers} worker(s) failed during processing");
         }
     }
     Ok(())

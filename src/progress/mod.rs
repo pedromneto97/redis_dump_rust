@@ -53,8 +53,8 @@ impl DumpProgress {
         let percentage = (current as f64 / self.total_keys as f64) * 100.0;
 
         self.progress_bar.set_message(format!(
-            "{:.1}% | {:.0} keys/s | {} processed",
-            percentage, keys_per_second, current
+            "{:.1}% | {:.0} keys/s | {current} processed",
+            percentage, keys_per_second
         ));
     }
 
@@ -70,6 +70,6 @@ impl DumpProgress {
     }
 
     pub fn update_stage(&self, stage: &str) {
-        self.progress_bar.set_message(format!("Stage: {}", stage));
+        self.progress_bar.set_message(format!("Stage: {stage}"));
     }
 }
