@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -54,7 +54,7 @@ jobs:
             bin_path: target/release/redis_dump_rust.exe
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -66,7 +66,7 @@ jobs:
         run: cargo build --release --bin redis_dump_rust
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.bin_path }}
@@ -78,36 +78,18 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Download all build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v5
         with:
           path: dist
 
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
+      - name: Create Release and Upload All Binaries
+        uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Linux binary
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/redis_dump_rust-linux/redis_dump_rust
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload macOS binary
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/redis_dump_rust-macos/redis_dump_rust
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Windows binary
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/redis_dump_rust-windows.exe/redis_dump_rust.exe
+          files: |
+            dist/redis_dump_rust-linux/redis_dump_rust
+            dist/redis_dump_rust-macos/redis_dump_rust
+            dist/redis_dump_rust-windows.exe/redis_dump_rust.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
