@@ -43,13 +43,4 @@ mod tests {
         assert_eq!(config.filter, "*");
         assert_eq!(config.output_format, OutputFormat::Resp);
     }
-
-    #[test]
-    fn test_output_format_enum() {
-        let fmt = OutputFormat::Commands;
-        match fmt {
-            OutputFormat::Commands => assert!(true),
-            OutputFormat::Resp => assert!(false, "Should be Commands"),
-        }
-    }
 }
