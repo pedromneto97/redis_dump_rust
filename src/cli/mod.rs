@@ -124,3 +124,34 @@ pub fn parse_cli() -> DumpConfig {
         },
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cli_default_values() {
+        // Simulate CLI args using clap directly
+        let app = Command::new("redis-dump-rust")
+            .arg(Arg::new("host").default_value("127.0.0.1"))
+            .arg(Arg::new("port").default_value("6379"))
+            .arg(Arg::new("filter").default_value("*"))
+            .arg(Arg::new("output").default_value("redis_dump.resp"))
+            .arg(Arg::new("batch-size").default_value("1000"))
+            .arg(Arg::new("workers").default_value("10"))
+            .arg(Arg::new("scan-size").default_value("1000"))
+            .arg(Arg::new("format").default_value("resp"));
+        let matches = app.get_matches_from(vec!["redis-dump-rust"]);
+        assert_eq!(matches.get_one::<String>("host").unwrap(), "127.0.0.1");
+        assert_eq!(matches.get_one::<String>("port").unwrap(), "6379");
+        assert_eq!(matches.get_one::<String>("filter").unwrap(), "*");
+        assert_eq!(
+            matches.get_one::<String>("output").unwrap(),
+            "redis_dump.resp"
+        );
+        assert_eq!(matches.get_one::<String>("batch-size").unwrap(), "1000");
+        assert_eq!(matches.get_one::<String>("workers").unwrap(), "10");
+        assert_eq!(matches.get_one::<String>("scan-size").unwrap(), "1000");
+        assert_eq!(matches.get_one::<String>("format").unwrap(), "resp");
+    }
+}

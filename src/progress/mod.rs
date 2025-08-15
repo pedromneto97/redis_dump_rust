@@ -72,3 +72,22 @@ impl DumpProgress {
         self.progress_bar.set_message(format!("Stage: {stage}"));
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_progress_bar_not_silent() {
+        let progress = DumpProgress::new(100, false);
+        assert_eq!(progress.total_keys, 100);
+        assert!(!progress.progress_bar.is_hidden());
+    }
+
+    #[test]
+    fn test_new_progress_bar_silent() {
+        let progress = DumpProgress::new(50, true);
+        assert_eq!(progress.total_keys, 50);
+        assert!(progress.progress_bar.is_hidden());
+    }
+}

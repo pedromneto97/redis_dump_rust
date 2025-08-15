@@ -438,3 +438,38 @@ pub async fn run_dump(config: DumpConfig) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::OutputFormat;
+
+    #[test]
+    fn test_format_resp_command_basic() {
+        let parts = vec!["SET", "key", "value"];
+        let resp = format_resp_command(&parts);
+        assert!(resp.starts_with("*3\r\n"));
+        assert!(resp.contains("$3\r\nSET\r\n"));
+    }
+
+    #[test]
+    fn test_parse_redis_command_quotes_and_whitespace() {
+        let cmd = "SET \"key name\" \"value\"";
+        let parsed = parse_redis_command(cmd);
+        assert_eq!(parsed, vec!["SET", "key name", "value"]);
+    }
+
+    #[test]
+    fn test_format_command_output_resp() {
+        let cmd = "SET key value";
+        let out = format_command_output(cmd, &OutputFormat::Resp);
+        assert!(out.contains("*3\r\n"));
+    }
+
+    #[test]
+    fn test_format_command_output_commands() {
+        let cmd = "SET key value";
+        let out = format_command_output(cmd, &OutputFormat::Commands);
+        assert_eq!(out, "SET key value\n");
+    }
+}
