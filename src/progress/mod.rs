@@ -82,7 +82,14 @@ mod tests {
     fn test_new_progress_bar_not_silent() {
         let progress = DumpProgress::new(100, false);
         assert_eq!(progress.total_keys, 100);
-        assert!(!progress.progress_bar.is_hidden());
+
+        let silent_progress = DumpProgress::new(100, true);
+        assert!(silent_progress.progress_bar.is_hidden());
+
+        assert_eq!(progress.total_keys, 100);
+
+        assert_eq!(progress.progress_bar.position(), 0);
+        assert_eq!(progress.progress_bar.length(), Some(100));
     }
 
     #[test]
