@@ -753,8 +753,8 @@ mod tests {
             let resp_out = format_command_output(input, &OutputFormat::Resp);
             let cmd_out = format_command_output(input, &OutputFormat::Commands);
 
-            assert!(resp_out.len() > 0);
-            assert!(cmd_out.len() > 0);
+            assert!(!resp_out.is_empty());
+            assert!(!cmd_out.is_empty());
         }
     }
 
