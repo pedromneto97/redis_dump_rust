@@ -26,16 +26,10 @@ redis_dump_rust [OPTIONS]
 
 ### Example
 
-Dump all keys from the default Redis server:
+For larger databases (>1M keys)
 
 ```bash
-redis_dump_rust
-```
-
-Dump keys from a specific database with a filter:
-
-```bash
-redis_dump_rust --db 1 --filter "user:*" --output users.txt
+redis_dump_rust --scan-size 20000 -w 50 -b 5000
 ```
 
 For more help:
