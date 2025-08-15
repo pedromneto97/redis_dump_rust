@@ -53,8 +53,7 @@ impl DumpProgress {
         let percentage = (current as f64 / self.total_keys as f64) * 100.0;
 
         self.progress_bar.set_message(format!(
-            "{:.1}% | {:.0} keys/s | {current} processed",
-            percentage, keys_per_second
+            "{percentage:.1}% | {keys_per_second:.0} keys/s | {current} processed"
         ));
     }
 
