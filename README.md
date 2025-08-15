@@ -23,6 +23,7 @@ redis_dump_rust [OPTIONS]
 | `-b, --batch-size`  | Batch size for operations         | `1000`            |
 | `-w, --workers`     | Number of parallel workers        | `10`              |
 | `-s, --silent`      | Silent mode                       | `false`           |
+| `--scan-size`       | Redis scan size                   | `1000`            |
 
 ### Example
 
