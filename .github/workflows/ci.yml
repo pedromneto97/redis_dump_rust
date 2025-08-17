@@ -86,6 +86,7 @@ jobs:
           elif [ "${{ matrix.os }}" = "windows-latest" ]; then
             mv target/release/redis_dump_rust.exe target/release/redis_dump_rust-windows.exe
           fi
+        shell: bash
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
