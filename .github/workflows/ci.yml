@@ -77,11 +77,22 @@ jobs:
       - name: Build release binary
         run: cargo build --release --bin redis_dump_rust
 
+      - name: Rename binary with platform suffix
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            mv target/release/redis_dump_rust target/release/redis_dump_rust-linux
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            mv target/release/redis_dump_rust target/release/redis_dump_rust-macos
+          elif [ "${{ matrix.os }}" = "windows-latest" ]; then
+            mv target/release/redis_dump_rust.exe target/release/redis_dump_rust-windows.exe
+          fi
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.bin_path }}
+          path: |
+            ${{ (matrix.os == 'windows-latest') && 'target/release/redis_dump_rust-windows.exe' || (matrix.os == 'macos-latest') && 'target/release/redis_dump_rust-macos' || 'target/release/redis_dump_rust-linux' }}
 
   release:
     name: Release
@@ -97,11 +108,9 @@ jobs:
       - name: Create Release and Upload All Binaries
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ github.ref_name }}
-          tag_name: ${{ github.ref_name }}
           files: |
-            dist/redis_dump_rust-linux/redis_dump_rust
-            dist/redis_dump_rust-macos/redis_dump_rust
-            dist/redis_dump_rust-windows.exe/redis_dump_rust.exe
+            dist/redis_dump_rust-linux/redis_dump_rust-linux
+            dist/redis_dump_rust-macos/redis_dump_rust-macos
+            dist/redis_dump_rust-windows.exe/redis_dump_rust-windows.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
