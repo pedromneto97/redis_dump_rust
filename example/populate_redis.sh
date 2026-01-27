@@ -29,6 +29,6 @@ done
 
 # Populate Redis with 1M string keys
 echo "Populating Redis with 1M string keys..."
-seq 1 1000000 | awk '{print "SET string_key_" $1 " value_" $1}' | docker exec -i ${REDIS_CONTAINER} redis-cli --pipe
+seq 1 1000000 | awk '{print "SETEX string_key_" $1 " 3600 value_" $1}' | docker exec -i ${REDIS_CONTAINER} redis-cli --pipe
 
 echo "Done! Redis has been populated successfully."
