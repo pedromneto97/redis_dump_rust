@@ -333,7 +333,7 @@ pub async fn dump_keys(
                 Err(e) => {
                     if !worker_config.silent {
                         eprintln!(
-                            "❌ Worker {} - Erro ao conectar ao Redis: {}",
+                            "❌ Worker {} - Failed to connect to Redis: {}",
                             worker_id + 1,
                             e
                         );
@@ -357,7 +357,7 @@ pub async fn dump_keys(
                                 {
                                     if !worker_config.silent {
                                         eprintln!(
-                                            "❌ Worker {} - Erro ao escrever comando: {}",
+                                            "❌ Worker {} - Failed to write command: {}",
                                             worker_id + 1,
                                             e
                                         );
@@ -371,7 +371,7 @@ pub async fn dump_keys(
                     Err(e) => {
                         if !worker_config.silent {
                             eprintln!(
-                                "❌ Worker {} - Erro ao gerar comandos para lote: {}",
+                                "❌ Worker {} - Failed to generate commands for batch: {}",
                                 worker_id + 1,
                                 e
                             );
@@ -387,10 +387,7 @@ pub async fn dump_keys(
                         format_command_output(command, &worker_config.output_format);
                     if let Err(e) = writer_guard.write_all(formatted_command.as_bytes()).await {
                         if !worker_config.silent {
-                            eprintln!(
-                                "❌ Worker {} - Erro ao escrever comando: {e}",
-                                worker_id + 1,
-                            );
+                            eprintln!("❌ Worker {} - Failed to write command: {e}", worker_id + 1,);
                         }
                     }
                 }
@@ -407,12 +404,12 @@ pub async fn dump_keys(
         if let Err(e) = result {
             failed_workers += 1;
             if !config.silent {
-                eprintln!("❌ Worker {} falhou: {e}", idx + 1);
+                eprintln!("❌ Worker {} failed: {e}", idx + 1);
             }
         } else if let Ok(Err(e)) = result {
             failed_workers += 1;
             if !config.silent {
-                eprintln!("❌ Worker {} erro: {e}", idx + 1);
+                eprintln!("❌ Worker {} error: {e}", idx + 1);
             }
         }
     }
@@ -455,7 +452,7 @@ pub async fn run_dump(config: DumpConfig) -> Result<()> {
         return Ok(());
     }
     if !config.silent {
-        println!("� Dump statistics:");
+        println!("📊 Dump statistics:");
         println!("   • Total keys found: {}", all_keys.len());
         println!("   • Parallel workers: {}", config.workers);
         println!("   • Batch size: {}", config.batch_size);
