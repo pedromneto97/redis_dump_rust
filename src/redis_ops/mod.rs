@@ -12,7 +12,7 @@ use crate::{
     progress::DumpProgress,
 };
 
-pub async fn connect_redis(config: &DumpConfig) -> Result<redis::aio::MultiplexedConnection> {
+async fn connect_redis(config: &DumpConfig) -> Result<redis::aio::MultiplexedConnection> {
     let redis_url = if let Some(password) = &config.password {
         format!(
             "redis://{}:{}@{}:{}",
@@ -35,7 +35,7 @@ pub async fn connect_redis(config: &DumpConfig) -> Result<redis::aio::Multiplexe
     Ok(connection)
 }
 
-pub async fn scan_keys(
+async fn scan_keys(
     connection: &mut redis::aio::MultiplexedConnection,
     pattern: &str,
     scan_size: usize,
@@ -64,7 +64,7 @@ pub async fn scan_keys(
     Ok(all_keys)
 }
 
-pub fn format_resp_command(parts: &[&str]) -> String {
+fn format_resp_command(parts: &[&str]) -> String {
     let mut result = String::new();
     result.push_str(&format!("*{}\r\n", parts.len()));
     for part in parts {
@@ -73,7 +73,7 @@ pub fn format_resp_command(parts: &[&str]) -> String {
     result
 }
 
-pub fn parse_redis_command(command: &str) -> Vec<String> {
+fn parse_redis_command(command: &str) -> Vec<String> {
     let mut parts = Vec::new();
     let mut current_part = String::new();
     let mut in_quotes = false;
@@ -138,7 +138,7 @@ pub fn parse_redis_command(command: &str) -> Vec<String> {
     parts
 }
 
-pub fn format_command_output(command: &str, format: &OutputFormat) -> String {
+fn format_command_output(command: &str, format: &OutputFormat) -> String {
     match format {
         OutputFormat::Commands => format!("{command}\n"),
         OutputFormat::Resp => {
@@ -149,7 +149,7 @@ pub fn format_command_output(command: &str, format: &OutputFormat) -> String {
     }
 }
 
-pub async fn generate_redis_commands_batch_optimized(
+async fn generate_redis_commands_batch_optimized(
     connection: &mut redis::aio::MultiplexedConnection,
     keys: &[String],
 ) -> Result<Vec<String>> {
