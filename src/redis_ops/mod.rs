@@ -310,10 +310,7 @@ pub async fn dump_keys(
     }
     progress.update_stage("Distributing work among workers");
     let chunk_size = keys.len().div_ceil(config.workers);
-    let key_chunks: Vec<Vec<String>> = keys
-        .chunks(chunk_size)
-        .map(|chunk| chunk.to_vec())
-        .collect();
+    let key_chunks = keys.chunks(chunk_size).map(|chunk| chunk.to_vec());
     if !config.silent {
         println!(
             "⚙️  Starting {} workers with ~{} keys each",
@@ -323,7 +320,7 @@ pub async fn dump_keys(
     }
     progress.update_stage("Processing keys");
     let mut workers = Vec::new();
-    for (worker_id, chunk) in key_chunks.into_iter().enumerate() {
+    for (worker_id, chunk) in key_chunks.enumerate() {
         if chunk.is_empty() {
             continue;
         }
