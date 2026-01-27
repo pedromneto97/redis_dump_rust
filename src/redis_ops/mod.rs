@@ -16,7 +16,7 @@ async fn connect_redis(config: &DumpConfig) -> Result<redis::aio::MultiplexedCon
     let redis_url = if let Some(password) = &config.password {
         format!(
             "redis://{}:{}@{}:{}",
-            password, password, config.host, config.port
+            config.user, password, config.host, config.port
         )
     } else {
         format!("redis://{}:{}", config.host, config.port)
