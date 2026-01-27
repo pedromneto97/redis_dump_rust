@@ -65,8 +65,8 @@ async fn scan_keys(
 }
 
 fn format_resp_command(parts: &[&str]) -> String {
-    let mut result = String::new();
-    result.push_str(&format!("*{}\r\n", parts.len()));
+    let mut result = format!("*{}\r\n", parts.len());
+
     for part in parts {
         result.push_str(&format!("${}\r\n{part}\r\n", part.len()));
     }
