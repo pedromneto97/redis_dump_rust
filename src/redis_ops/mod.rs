@@ -1,10 +1,11 @@
 use anyhow::Result;
 use redis::AsyncCommands;
-use std::collections::HashMap;
-use std::sync::Arc;
-use tokio::fs::File;
-use tokio::io::{AsyncWriteExt, BufWriter};
-use tokio::sync::Mutex;
+use std::{collections::HashMap, sync::Arc};
+use tokio::{
+    fs::File,
+    io::{AsyncWriteExt, BufWriter},
+    sync::Mutex,
+};
 
 use crate::{
     config::{DumpConfig, OutputFormat},
