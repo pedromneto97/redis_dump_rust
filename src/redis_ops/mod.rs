@@ -1,14 +1,17 @@
+mod commands;
 mod connection;
 mod formatting;
 mod protocol;
 
+pub(crate) use commands::{
+    generate_hash_commands, generate_list_commands, generate_set_commands,
+    generate_string_command, generate_zset_commands,
+};
 pub(crate) use connection::{connect_redis, scan_keys};
-pub(crate) use formatting::{append_expire_command, quoted};
 pub(crate) use protocol::format_command_output;
 
 use anyhow::Result;
-use redis::AsyncCommands;
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
@@ -16,7 +19,7 @@ use tokio::{
 };
 
 use crate::{
-    config::{DumpConfig, OutputFormat},
+    config::DumpConfig,
     progress::DumpProgress,
 };
 
@@ -27,111 +30,6 @@ struct KeyMetadata {
     key: String,
     key_type: String,
     ttl: Option<i64>,
-}
-
-// --- Command Generation per Data Type ---
-
-fn generate_string_command(key: &str, value: &str, ttl: Option<i64>) -> String {
-    if let Some(ttl) = ttl {
-        format!("SETEX {} {} {}", quoted(key), ttl, quoted(value))
-    } else {
-        format!("SET {} {}", quoted(key), quoted(value))
-    }
-}
-
-async fn generate_list_commands(
-    connection: &mut redis::aio::MultiplexedConnection,
-    key: &str,
-    ttl: Option<i64>,
-) -> Result<Vec<String>> {
-    let items: Vec<String> = redis::cmd("LRANGE")
-        .arg(key)
-        .arg(0)
-        .arg(-1)
-        .query_async(connection)
-        .await
-        .unwrap_or_default();
-
-    let mut commands = Vec::new();
-    if !items.is_empty() {
-        let quoted_items: Vec<String> = items.iter().map(|item| quoted(item)).collect();
-        commands.push(format!("RPUSH {} {}", quoted(key), quoted_items.join(" ")));
-    }
-    append_expire_command(&mut commands, key, ttl);
-    Ok(commands)
-}
-
-async fn generate_set_commands(
-    connection: &mut redis::aio::MultiplexedConnection,
-    key: &str,
-    ttl: Option<i64>,
-) -> Result<Vec<String>> {
-    let items: Vec<String> = redis::cmd("SMEMBERS")
-        .arg(key)
-        .query_async(connection)
-        .await
-        .unwrap_or_default();
-
-    let mut commands = Vec::new();
-    if !items.is_empty() {
-        let quoted_items: Vec<String> = items.iter().map(|item| quoted(item)).collect();
-        commands.push(format!("SADD {} {}", quoted(key), quoted_items.join(" ")));
-    }
-    append_expire_command(&mut commands, key, ttl);
-    Ok(commands)
-}
-
-async fn generate_zset_commands(
-    connection: &mut redis::aio::MultiplexedConnection,
-    key: &str,
-    ttl: Option<i64>,
-) -> Result<Vec<String>> {
-    let items: Vec<(String, f64)> = redis::cmd("ZRANGE")
-        .arg(key)
-        .arg(0)
-        .arg(-1)
-        .arg("WITHSCORES")
-        .query_async(connection)
-        .await
-        .unwrap_or_default();
-
-    let mut commands = Vec::new();
-    if !items.is_empty() {
-        let score_member_pairs: Vec<String> = items
-            .iter()
-            .map(|(member, score)| format!("{} {}", score, quoted(member)))
-            .collect();
-        commands.push(format!(
-            "ZADD {} {}",
-            quoted(key),
-            score_member_pairs.join(" ")
-        ));
-    }
-    append_expire_command(&mut commands, key, ttl);
-    Ok(commands)
-}
-
-async fn generate_hash_commands(
-    connection: &mut redis::aio::MultiplexedConnection,
-    key: &str,
-    ttl: Option<i64>,
-) -> Result<Vec<String>> {
-    let hash_data: HashMap<String, String> = connection.hgetall(key).await.unwrap_or_default();
-
-    let mut commands = Vec::new();
-    if !hash_data.is_empty() {
-        let field_value_pairs: Vec<String> = hash_data
-            .iter()
-            .map(|(field, value)| format!("{} {}", quoted(field), quoted(value)))
-            .collect();
-        commands.push(format!(
-            "HMSET {} {}",
-            quoted(key),
-            field_value_pairs.join(" ")
-        ));
-    }
-    append_expire_command(&mut commands, key, ttl);
-    Ok(commands)
 }
 
 // --- Batch Processing ---
@@ -474,40 +372,6 @@ pub async fn run_dump(config: DumpConfig) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_generate_commands_empty_input() {
-        // Test the edge case of empty keys slice
-        // Note: This would normally require a Redis connection, but we can test the early return
-        // This is more of a documentation of expected behavior
-        let empty_keys: Vec<String> = vec![];
-
-        // We can't easily test the actual function without mocking Redis,
-        // but we can test the logic that it should handle empty input gracefully
-        assert!(empty_keys.is_empty());
-
-        // Test format_command_output with empty command
-        let empty_resp = format_command_output("", &OutputFormat::Resp);
-        assert_eq!(empty_resp, "*0\r\n");
-    }
-
-    #[test]
-    fn test_generate_string_command_without_ttl() {
-        let cmd = generate_string_command("key", "value", None);
-        assert_eq!(cmd, "SET \"key\" \"value\"");
-    }
-
-    #[test]
-    fn test_generate_string_command_with_ttl() {
-        let cmd = generate_string_command("key", "value", Some(300));
-        assert_eq!(cmd, "SETEX \"key\" 300 \"value\"");
-    }
-
-    #[test]
-    fn test_generate_string_command_with_quotes() {
-        let cmd = generate_string_command("my\"key", "my\"value", None);
-        assert_eq!(cmd, "SET \"my\\\"key\" \"my\\\"value\"");
-    }
 
     #[test]
     fn test_partition_keys_by_type() {
