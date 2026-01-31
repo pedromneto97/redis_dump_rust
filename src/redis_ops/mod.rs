@@ -1,5 +1,7 @@
+mod formatting;
 mod protocol;
 
+pub(crate) use formatting::{append_expire_command, quoted};
 pub(crate) use protocol::format_command_output;
 
 use anyhow::Result;
@@ -66,22 +68,6 @@ async fn scan_keys(
     }
 
     Ok(all_keys)
-}
-
-// --- Value Formatting Helpers ---
-
-fn escape_quotes(s: &str) -> String {
-    s.replace('"', "\\\"")
-}
-
-fn quoted(s: &str) -> String {
-    format!("\"{}\"", escape_quotes(s))
-}
-
-fn append_expire_command(commands: &mut Vec<String>, key: &str, ttl: Option<i64>) {
-    if let Some(ttl) = ttl {
-        commands.push(format!("EXPIRE {} {}", quoted(key), ttl));
-    }
 }
 
 // --- Key Metadata ---
@@ -556,21 +542,6 @@ mod tests {
     }
 
     #[test]
-    fn test_escape_quotes() {
-        assert_eq!(escape_quotes("simple"), "simple");
-        assert_eq!(escape_quotes("has\"quote"), "has\\\"quote");
-        assert_eq!(escape_quotes("\"both\""), "\\\"both\\\"");
-        assert_eq!(escape_quotes(""), "");
-    }
-
-    #[test]
-    fn test_quoted() {
-        assert_eq!(quoted("simple"), "\"simple\"");
-        assert_eq!(quoted("has\"quote"), "\"has\\\"quote\"");
-        assert_eq!(quoted(""), "\"\"");
-    }
-
-    #[test]
     fn test_generate_string_command_without_ttl() {
         let cmd = generate_string_command("key", "value", None);
         assert_eq!(cmd, "SET \"key\" \"value\"");
@@ -586,21 +557,6 @@ mod tests {
     fn test_generate_string_command_with_quotes() {
         let cmd = generate_string_command("my\"key", "my\"value", None);
         assert_eq!(cmd, "SET \"my\\\"key\" \"my\\\"value\"");
-    }
-
-    #[test]
-    fn test_append_expire_command_with_ttl() {
-        let mut commands = Vec::new();
-        append_expire_command(&mut commands, "mykey", Some(300));
-        assert_eq!(commands.len(), 1);
-        assert_eq!(commands[0], "EXPIRE \"mykey\" 300");
-    }
-
-    #[test]
-    fn test_append_expire_command_without_ttl() {
-        let mut commands = Vec::new();
-        append_expire_command(&mut commands, "mykey", None);
-        assert!(commands.is_empty());
     }
 
     #[test]
