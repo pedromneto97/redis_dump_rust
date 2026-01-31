@@ -1,8 +1,8 @@
 use anyhow::Result;
 
 use super::commands::{
-    generate_hash_commands, generate_list_commands, generate_set_commands,
-    generate_string_command, generate_zset_commands,
+    generate_hash_commands, generate_list_commands, generate_set_commands, generate_string_command,
+    generate_zset_commands,
 };
 
 #[derive(Debug, Clone)]

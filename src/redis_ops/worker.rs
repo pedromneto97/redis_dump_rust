@@ -6,10 +6,7 @@ use tokio::{
     sync::Mutex,
 };
 
-use crate::{
-    config::DumpConfig,
-    progress::DumpProgress,
-};
+use crate::{config::DumpConfig, progress::DumpProgress};
 
 use super::batch::generate_redis_commands_batch_optimized;
 use super::connection::connect_redis;
