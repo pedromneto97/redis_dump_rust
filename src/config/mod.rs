@@ -2,6 +2,7 @@
 pub struct DumpConfig {
     pub host: String,
     pub port: u16,
+    pub user: String,
     pub password: Option<String>,
     pub database: Option<u8>,
     pub filter: String,
@@ -28,6 +29,7 @@ mod tests {
         let config = DumpConfig {
             host: "localhost".to_string(),
             port: 6379,
+            user: "default".to_string(),
             password: None,
             database: None,
             filter: "*".to_string(),
@@ -40,6 +42,7 @@ mod tests {
         };
         assert_eq!(config.host, "localhost");
         assert_eq!(config.port, 6379);
+        assert_eq!(config.user, "default");
         assert_eq!(config.filter, "*");
         assert_eq!(config.output_format, OutputFormat::Resp);
     }
@@ -49,6 +52,7 @@ mod tests {
         let config = DumpConfig {
             host: "redis.example.com".to_string(),
             port: 6380,
+            user: "admin".to_string(),
             password: Some("secret123".to_string()),
             database: Some(5),
             filter: "user:*".to_string(),
@@ -95,6 +99,7 @@ mod tests {
         let original = DumpConfig {
             host: "localhost".to_string(),
             port: 6379,
+            user: "default".to_string(),
             password: Some("password".to_string()),
             database: Some(1),
             filter: "test:*".to_string(),
@@ -127,6 +132,7 @@ mod tests {
         let config = DumpConfig {
             host: "127.0.0.1".to_string(),
             port: 1,
+            user: "default".to_string(),
             password: None,
             database: Some(0),
             filter: "".to_string(), // Empty filter
@@ -152,6 +158,7 @@ mod tests {
         let config = DumpConfig {
             host: "very.long.redis.hostname.example.com".to_string(),
             port: 65535,
+            user: "default".to_string(),
             password: Some("very_long_password_with_special_chars_!@#$%^&*()".to_string()),
             database: Some(15), // Redis default max DB is 15
             filter: "*:*:*:*:*".to_string(),
@@ -190,6 +197,7 @@ mod tests {
             let config = DumpConfig {
                 host: "localhost".to_string(),
                 port: 6379,
+                user: "default".to_string(),
                 password: None,
                 database: None,
                 filter: pattern.to_string(),

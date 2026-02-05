@@ -30,6 +30,14 @@ pub fn parse_cli() -> DumpConfig {
                 .default_value("6379"),
         )
         .arg(
+            Arg::new("user")
+                .short('u')
+                .long("user")
+                .value_name("USER")
+                .help("Redis username")
+                .default_value("default"),
+        )
+        .arg(
             Arg::new("password")
                 .short('a')
                 .long("auth")
@@ -102,6 +110,7 @@ pub fn parse_cli() -> DumpConfig {
     DumpConfig {
         host: matches.get_one::<String>("host").unwrap().clone(),
         port: matches.get_one::<String>("port").unwrap().parse().unwrap(),
+        user: matches.get_one::<String>("user").unwrap().clone(),
         password: matches.get_one::<String>("password").cloned(),
         database: matches
             .get_one::<String>("database")
