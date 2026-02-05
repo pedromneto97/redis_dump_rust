@@ -6,11 +6,14 @@ use tokio::{
     sync::Mutex,
 };
 
-use crate::{config::DumpConfig, progress::DumpProgress};
-
-use super::batch::generate_redis_commands_batch_optimized;
-use super::connection::connect_redis;
-use super::protocol::format_command_output;
+use crate::{
+    config::DumpConfig,
+    progress::DumpProgress,
+    redis_ops::{
+        batch::generate_redis_commands_batch_optimized, connection::connect_redis,
+        protocol::format_command_output,
+    },
+};
 
 #[derive(Clone)]
 pub(crate) struct WorkerContext {

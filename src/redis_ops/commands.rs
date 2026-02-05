@@ -2,7 +2,7 @@ use anyhow::Result;
 use redis::AsyncCommands;
 use std::collections::HashMap;
 
-use super::formatting::{append_expire_command, quoted};
+use crate::redis_ops::formatting::{append_expire_command, quoted};
 
 pub(crate) fn generate_string_command(key: &str, value: &str, ttl: Option<i64>) -> String {
     if let Some(ttl) = ttl {

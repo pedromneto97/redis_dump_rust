@@ -6,10 +6,14 @@ use tokio::{
     sync::Mutex,
 };
 
-use crate::{config::DumpConfig, progress::DumpProgress};
-
-use super::connection::{connect_redis, scan_keys};
-use super::worker::{collect_worker_results, create_worker_contexts, spawn_workers};
+use crate::{
+    config::DumpConfig,
+    progress::DumpProgress,
+    redis_ops::{
+        connection::{connect_redis, scan_keys},
+        worker::{collect_worker_results, create_worker_contexts, spawn_workers},
+    },
+};
 
 fn log_processing_start(config: &DumpConfig, key_count: usize, output_file: &str) {
     if !config.silent {
