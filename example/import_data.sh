@@ -32,6 +32,6 @@ done
 echo "Clearing existing data in Redis..."
 docker exec ${REDIS_CONTAINER} redis-cli FLUSHALL
 
-# Import data from dump.rdb
+# Import data from dump.resp
 echo "Importing data from dump.resp into Redis..."
 docker exec -i ${REDIS_CONTAINER} redis-cli --pipe < dump.resp
