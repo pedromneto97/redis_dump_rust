@@ -7,10 +7,10 @@ use tokio::{
 };
 
 use crate::{
-    config::DumpConfig,
+    config::{resolve_output_path, DumpConfig},
     progress::DumpProgress,
     redis_ops::{
-        connection::{connect_redis, scan_keys},
+        connection::{connect_redis, discover_databases, scan_keys},
         worker::{collect_worker_results, create_worker_contexts, spawn_workers},
     },
 };
@@ -98,6 +98,38 @@ pub async fn dump_keys(
     Ok(())
 }
 
+async fn dump_database(config: &DumpConfig, output_file: &str, group_name: &str) -> Result<()> {
+    let mut connection = connect_redis(config).await?;
+    if !config.silent {
+        println!("✅ Connection established successfully!");
+        println!("🔍 Fetching keys with filter: '{}'", config.filter);
+    }
+
+    let all_keys = scan_keys(&mut connection, &config.filter, config.scan_size).await?;
+    if all_keys.is_empty() {
+        println!("❌ No keys found with filter: {}", config.filter);
+        return Ok(());
+    }
+
+    if !config.silent {
+        println!("📊 Dump statistics:");
+        println!("   • Total keys found: {}", all_keys.len());
+        println!("   • Parallel workers: {}", config.workers);
+        println!("   • Batch size: {}", config.batch_size);
+        println!("   • SCAN size: {}", config.scan_size);
+        println!("   • Output file: {}", output_file);
+        println!("   • Preserve TTL: ✅ Always enabled");
+        println!();
+    }
+
+    dump_keys(all_keys, config, output_file, group_name).await?;
+    if !config.silent {
+        println!("🎉 Dump completed successfully!");
+        println!("📁 File saved: {}", output_file);
+    }
+    Ok(())
+}
+
 /// Run the dump process
 pub async fn run_dump(config: DumpConfig) -> Result<()> {
     if !config.silent {
@@ -107,30 +139,41 @@ pub async fn run_dump(config: DumpConfig) -> Result<()> {
             config.host, config.port
         );
     }
-    let mut connection = connect_redis(&config).await?;
-    if !config.silent {
-        println!("✅ Connection established successfully!");
-        println!("🔍 Fetching keys with filter: '{}'", config.filter);
+    if let Some(db) = config.database {
+        if !config.silent {
+            println!("🗂️  Target database: {}", db);
+        }
+        dump_database(&config, &config.output_file, "filtered keys").await?;
+        return Ok(());
     }
-    let all_keys = scan_keys(&mut connection, &config.filter, config.scan_size).await?;
-    if all_keys.is_empty() {
+
+    let mut connection = connect_redis(&config).await?;
+    let databases = discover_databases(&mut connection).await?;
+    if databases.is_empty() {
         println!("❌ No keys found with filter: {}", config.filter);
         return Ok(());
     }
-    if !config.silent {
-        println!("📊 Dump statistics:");
-        println!("   • Total keys found: {}", all_keys.len());
-        println!("   • Parallel workers: {}", config.workers);
-        println!("   • Batch size: {}", config.batch_size);
-        println!("   • SCAN size: {}", config.scan_size);
-        println!("   • Output file: {}", config.output_file);
-        println!("   • Preserve TTL: ✅ Always enabled");
-        println!();
+
+    if databases.len() == 1 {
+        let db = databases[0];
+        if !config.silent {
+            println!("🗂️  Target database: {}", db);
+        }
+        let mut db_config = config.clone();
+        db_config.database = Some(db);
+        dump_database(&db_config, &config.output_file, "filtered keys").await?;
+        return Ok(());
     }
-    dump_keys(all_keys, &config, &config.output_file, "filtered keys").await?;
-    if !config.silent {
-        println!("🎉 Dump completed successfully!");
-        println!("📁 File saved: {}", config.output_file);
+
+    for db in databases {
+        let mut db_config = config.clone();
+        db_config.database = Some(db);
+        let output_file = resolve_output_path(&config.output_file, db);
+        if !db_config.silent {
+            println!("🗂️  Dumping database {} -> {}", db, output_file);
+        }
+        dump_database(&db_config, &output_file, "filtered keys").await?;
     }
+
     Ok(())
 }
