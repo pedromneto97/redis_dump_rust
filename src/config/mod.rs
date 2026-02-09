@@ -20,6 +20,22 @@ pub enum OutputFormat {
     Resp,
 }
 
+pub fn resolve_output_path(base_path: &str, db: u8) -> String {
+    use std::path::Path;
+
+    let path = Path::new(base_path);
+    let stem = path
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .unwrap_or(base_path);
+    let ext = path.extension().and_then(|value| value.to_str());
+
+    match ext {
+        Some(ext) => format!("{stem}_db{db}.{ext}"),
+        None => format!("{stem}_db{db}"),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,6 +108,18 @@ mod tests {
 
         assert_eq!(format!("{:?}", resp_format), "Resp");
         assert_eq!(format!("{:?}", commands_format), "Commands");
+    }
+
+    #[test]
+    fn test_resolve_output_path_with_extension() {
+        let result = resolve_output_path("redis_dump.resp", 3);
+        assert_eq!(result, "redis_dump_db3.resp");
+    }
+
+    #[test]
+    fn test_resolve_output_path_without_extension() {
+        let result = resolve_output_path("redis_dump", 0);
+        assert_eq!(result, "redis_dump_db0");
     }
 
     #[test]

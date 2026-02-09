@@ -49,7 +49,7 @@ pub fn parse_cli() -> DumpConfig {
                 .short('d')
                 .long("db")
                 .value_name("DB")
-                .help("Database number (default: all)"),
+                .help("Database number (if omitted, dumps all databases with data)"),
         )
         .arg(
             Arg::new("filter")
@@ -64,7 +64,7 @@ pub fn parse_cli() -> DumpConfig {
                 .short('o')
                 .long("output")
                 .value_name("FILE")
-                .help("Output file")
+                .help("Output file (per-db dumps add _db{N} before the extension)")
                 .default_value("redis_dump.resp"),
         )
         .arg(
