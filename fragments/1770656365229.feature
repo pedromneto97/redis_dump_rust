@@ -1,1 +1,0 @@
-Dump multiple Redis databases when `--db` is omitted, writing per-db output files.Adiciona contexto do assistenter virtual de gestão.
