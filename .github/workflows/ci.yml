@@ -107,7 +107,7 @@ jobs:
           path: dist
 
       - name: Create Release and Upload All Binaries
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/redis_dump_rust-linux/redis_dump_rust-linux
